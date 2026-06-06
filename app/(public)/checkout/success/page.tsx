@@ -4,11 +4,23 @@ import { CheckCircle2, Ticket, CalendarDays, MapPin } from "lucide-react";
 import Link from "next/link";
 import { stripe } from "@/lib/stripe";
 import { PrintButton } from "@/components/public/PrintButton";
+import QRCode from "qrcode";
+import { Resend } from "resend";
+import { TicketEmail } from "@/components/emails/TicketEmail";
 
 export const metadata = { title: "Ticket Confirmed" };
 
 interface Props {
   searchParams: Promise<{ session_id?: string }>;
+}
+
+function generateTicketCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let result = "TV-";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
 export default async function CheckoutSuccessPage({ searchParams }: Props) {
@@ -30,10 +42,99 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
   }
 
   // Retrieve ticket from database
-  const ticket = await prisma.ticket.findUnique({
+  let ticket = await prisma.ticket.findUnique({
     where: { stripeSessionId: session_id },
     include: { event: true },
   });
+
+  if (!ticket) {
+    // Webhook hasn't finished fulfilling yet. Try to fulfill it here directly.
+    const { eventId, customerName, customerEmail } = session.metadata || {};
+
+    if (eventId && customerName && customerEmail) {
+      try {
+        const ticketCode = generateTicketCode();
+
+        const qrCode = await QRCode.toDataURL(ticketCode, {
+          color: {
+            dark: "#000000",
+            light: "#ffffff",
+          },
+          margin: 2,
+          width: 300,
+        });
+
+        // Create Ticket record & Update Event capacity in a transaction
+        await prisma.$transaction(async (tx) => {
+          const dbEvent = await tx.event.findUnique({ where: { id: eventId } });
+          if (!dbEvent) throw new Error("Event not found");
+
+          await tx.ticket.create({
+            data: {
+              ticketCode,
+              stripeSessionId: session_id,
+              customerName,
+              customerEmail,
+              qrCode,
+              eventId,
+            },
+          });
+
+          await tx.event.update({
+            where: { id: eventId },
+            data: {
+              ticketsSold: { increment: 1 },
+            },
+          });
+        });
+
+        // Re-query the ticket to get event relation
+        ticket = await prisma.ticket.findUnique({
+          where: { stripeSessionId: session_id },
+          include: { event: true },
+        });
+
+        // Send Confirmation Email
+        try {
+          const resend = new Resend(process.env.RESEND_API_KEY);
+          if (ticket?.event) {
+            const formattedDate = new Intl.DateTimeFormat("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            }).format(new Date(ticket.event.date));
+
+            await resend.emails.send({
+              from: "TicketVault <onboarding@resend.dev>",
+              to: customerEmail,
+              subject: `Your Ticket for ${ticket.event.title}`,
+              react: TicketEmail({
+                customerName: customerName as string,
+                eventName: ticket.event.title,
+                eventDate: formattedDate,
+                eventLocation: ticket.event.location,
+                ticketCode,
+                qrCodeUrl: qrCode,
+              }),
+            });
+            console.log(`Email sent to ${customerEmail}`);
+          }
+        } catch (emailErr) {
+          console.error("Failed to send email inside success page:", emailErr);
+        }
+      } catch (err: any) {
+        console.error("Direct fulfillment failed, checking if created by webhook:", err);
+        // If it was created in the meantime by the webhook, retrieve it
+        ticket = await prisma.ticket.findUnique({
+          where: { stripeSessionId: session_id },
+          include: { event: true },
+        });
+      }
+    }
+  }
 
   if (!ticket) {
     // Webhook hasn't finished fulfilling yet. Auto-refresh.
