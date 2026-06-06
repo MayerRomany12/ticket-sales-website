@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+model Admin {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+// ─── Event ────────────────────────────────────────────────────────────────────
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  image       String?
+  location    String
+  date        DateTime
+  price       Float
+  capacity    Int
+  ticketsSold Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  tickets Ticket[]
+}
+
+// ─── Ticket ───────────────────────────────────────────────────────────────────
+
+model Ticket {
+  id            String   @id @default(cuid())
+  ticketCode      String   @unique
+  stripeSessionId String?  @unique
+  customerName    String
+  customerEmail String
+  qrCode        String?
+  isUsed        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
