@@ -14,7 +14,7 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
-function formatPrice(price: any) {
+function formatPrice(price: number) {
   const numPrice = Number(price);
   return numPrice === 0
     ? "Free"

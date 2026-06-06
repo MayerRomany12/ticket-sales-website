@@ -34,9 +34,10 @@ export async function POST(req: Request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (err: any) {
-    console.error("Webhook signature verification failed:", err.message);
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : "Unknown error";
+    console.error("Webhook signature verification failed:", errorMessage);
+    return new NextResponse(`Webhook Error: ${errorMessage}`, { status: 400 });
   }
 
   // Handle the checkout.session.completed event
@@ -124,7 +125,7 @@ export async function POST(req: Request) {
         });
         console.log(`Email sent to ${customerEmail}`);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Fulfillment failed:", err);
       return new NextResponse("Fulfillment Error", { status: 500 });
     }

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { CheckCircle2, Ticket, CalendarDays, MapPin, Download } from "lucide-react";
+import { CheckCircle2, Ticket, CalendarDays, MapPin } from "lucide-react";
 import Link from "next/link";
 import { stripe } from "@/lib/stripe";
 import { PrintButton } from "@/components/public/PrintButton";
@@ -25,7 +25,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
     if (session.payment_status !== "paid") {
       redirect("/");
     }
-  } catch (err) {
+  } catch {
     redirect("/");
   }
 
@@ -67,7 +67,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
             <CheckCircle2 className="w-8 h-8 relative z-10" />
           </div>
           <h1 className="text-4xl font-extrabold text-white tracking-tight mb-4">
-            You're Going to {ticket.event.title}!
+            You&apos;re Going to {ticket.event.title}!
           </h1>
           <p className="text-lg text-slate-400">
             A confirmation email has been sent to <span className="text-white font-medium">{ticket.customerEmail}</span>

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { CalendarDays, MapPin, Ticket, UserRound, ArrowLeft } from "lucide-react";
+import { CalendarDays, MapPin, Ticket, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 

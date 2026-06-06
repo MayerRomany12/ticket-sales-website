@@ -19,7 +19,7 @@ export default function ValidatePage() {
     try {
       const res = await validateTicket(code);
       setResult(res);
-    } catch (err) {
+    } catch {
       setResult({ status: "INVALID", message: "An error occurred while validating." });
     } finally {
       setIsProcessing(false);
@@ -52,18 +52,16 @@ export default function ValidatePage() {
         <div className="flex bg-slate-800 rounded-lg p-1">
           <button
             onClick={() => { setMode("scan"); setResult(null); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              mode === "scan" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-slate-300"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === "scan" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-slate-300"
+              }`}
           >
             <ScanLine className="w-4 h-4" />
             Scanner
           </button>
           <button
             onClick={() => { setMode("manual"); setResult(null); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              mode === "manual" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-slate-300"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${mode === "manual" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-slate-300"
+              }`}
           >
             <Keyboard className="w-4 h-4" />
             Manual
@@ -73,16 +71,15 @@ export default function ValidatePage() {
 
       {/* Validation Result Area */}
       {result && (
-        <div className={`p-6 rounded-2xl border ${
-          result.status === "VALID" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+        <div className={`p-6 rounded-2xl border ${result.status === "VALID" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
           result.status === "USED" ? "bg-amber-500/10 border-amber-500/20 text-amber-400" :
-          "bg-red-500/10 border-red-500/20 text-red-400"
-        }`}>
+            "bg-red-500/10 border-red-500/20 text-red-400"
+          }`}>
           <div className="flex items-start gap-4">
             {result.status === "VALID" && <CheckCircle2 className="w-8 h-8 flex-shrink-0" />}
             {result.status === "USED" && <AlertCircle className="w-8 h-8 flex-shrink-0" />}
             {result.status === "INVALID" && <XCircle className="w-8 h-8 flex-shrink-0" />}
-            
+
             <div className="flex-1">
               <h3 className="text-xl font-bold mb-1">
                 {result.status === "VALID" && "Access Granted"}
@@ -90,7 +87,7 @@ export default function ValidatePage() {
                 {result.status === "INVALID" && "Invalid Ticket"}
               </h3>
               <p className="text-sm opacity-90 mb-4">{result.message}</p>
-              
+
               {result.status !== "INVALID" && (
                 <div className="bg-black/20 rounded-lg p-4 space-y-2 text-sm text-slate-300">
                   <p><span className="text-slate-500 mr-2">Ticket:</span> <span className="font-mono text-white">{result.ticketCode}</span></p>
@@ -100,14 +97,13 @@ export default function ValidatePage() {
               )}
             </div>
           </div>
-          
+
           <button
             onClick={() => setResult(null)}
-            className={`mt-6 w-full py-2.5 rounded-xl font-bold text-white transition-colors ${
-              result.status === "VALID" ? "bg-emerald-600 hover:bg-emerald-500" :
+            className={`mt-6 w-full py-2.5 rounded-xl font-bold text-white transition-colors ${result.status === "VALID" ? "bg-emerald-600 hover:bg-emerald-500" :
               result.status === "USED" ? "bg-amber-600 hover:bg-amber-500" :
-              "bg-red-600 hover:bg-red-500"
-            }`}
+                "bg-red-600 hover:bg-red-500"
+              }`}
           >
             Scan Next Ticket
           </button>

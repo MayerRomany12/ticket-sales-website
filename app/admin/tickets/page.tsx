@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Ticket, Search, CheckCircle2, XCircle } from "lucide-react";
+import { Ticket, Search, CheckCircle2 } from "lucide-react";
 
 export const metadata = {
   title: "Manage Tickets | TicketVault Admin",
